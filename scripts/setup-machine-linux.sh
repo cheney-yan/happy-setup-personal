@@ -87,7 +87,7 @@ cd "$REPO_DIR"
 
 # ── 4. Install dependencies & build ──────────────────────────────────────────
 log "Step 4/6 — Installing dependencies..."
-npm install -g yarn 2>/dev/null || true
+corepack enable
 yarn install
 
 log "Building happy-cli..."
