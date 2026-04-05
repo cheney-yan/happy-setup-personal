@@ -224,6 +224,8 @@ cat > "$PLIST_PATH" <<PLIST
         <string>$HAPPY_SERVER_URL</string>
         <key>HAPPY_HOME_DIR</key>
         <string>$HAPPY_HOME</string>
+        <key>PATH</key>
+        <string>$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     </dict>
     <key>StandardOutPath</key>
     <string>$HAPPY_HOME/logs/launchd-stdout.log</string>
