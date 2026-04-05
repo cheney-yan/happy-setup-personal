@@ -64,10 +64,20 @@ log "Step 2/6 — Installing Node $NODE_VERSION..."
 if [ "$USE_FNM" = "true" ]; then
     fnm install $NODE_VERSION
     fnm use $NODE_VERSION
+    if ! fnm alias list 2>/dev/null | grep -q "^ai "; then
+        fnm alias $NODE_VERSION ai && log "Created fnm alias 'ai' → Node $NODE_VERSION"
+    else
+        warn "fnm alias 'ai' already exists, skipping."
+    fi
     NODE_BIN="$(fnm which)"
 else
     nvm install $NODE_VERSION
     nvm use $NODE_VERSION
+    if ! nvm alias ai >/dev/null 2>&1; then
+        nvm alias ai $NODE_VERSION && log "Created nvm alias 'ai' → Node $NODE_VERSION"
+    else
+        warn "nvm alias 'ai' already exists, skipping."
+    fi
     NODE_BIN="$(nvm which $NODE_VERSION)"
 fi
 
