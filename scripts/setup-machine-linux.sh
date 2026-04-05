@@ -107,11 +107,13 @@ log "Step 3/6 — Repo..."
 if [ ! -d "$REPO_DIR/.git" ]; then
     mkdir -p "$(dirname "$REPO_DIR")"
     git clone https://github.com/cheney-yan/happy-setup-personal.git "$REPO_DIR"
+    git -C "$REPO_DIR" submodule update --init
 else
     warn "Repo already exists, pulling latest..."
     git -C "$REPO_DIR" pull || warn "git pull failed (local changes?), continuing."
+    git -C "$REPO_DIR" submodule update --init
 fi
-cd "$REPO_DIR"
+cd "$REPO_DIR/happy"
 
 # ── 4. Install dependencies & build ──────────────────────────────────────────
 log "Step 4/6 — Dependencies & build..."
@@ -122,7 +124,7 @@ yarn workspace happy build
 # ── 5. Auth ───────────────────────────────────────────────────────────────────
 log "Step 5/6 — Authentication..."
 AUTH_STATUS=$(HAPPY_SERVER_URL=$HAPPY_SERVER_URL HAPPY_HOME_DIR=$HAPPY_HOME \
-    "$NODE_BIN" "$REPO_DIR/packages/happy-cli/bin/happy.mjs" auth status 2>&1 || true)
+    "$NODE_BIN" "$REPO_DIR/happy/packages/happy-cli/bin/happy.mjs" auth status 2>&1 || true)
 
 if echo "$AUTH_STATUS" | grep -q "Authenticated"; then
     warn "Already authenticated, skipping auth login."
@@ -132,7 +134,7 @@ else
     echo ""
     echo -e "  ${YELLOW}HAPPY_SERVER_URL=$HAPPY_SERVER_URL \\"
     echo "  HAPPY_HOME_DIR=$HAPPY_HOME \\"
-    echo -e "  node $REPO_DIR/packages/happy-cli/bin/happy.mjs auth login${NC}"
+    echo -e "  node $REPO_DIR/happy/packages/happy-cli/bin/happy.mjs auth login${NC}"
     echo ""
     echo "  Choose 'Mobile', use the in-app scanner (not system camera)."
     echo "  Make sure Happy App server is set to: $HAPPY_SERVER_URL"
@@ -140,7 +142,7 @@ else
     read -rp "Press ENTER once auth is complete..."
 
     AUTH_STATUS=$(HAPPY_SERVER_URL=$HAPPY_SERVER_URL HAPPY_HOME_DIR=$HAPPY_HOME \
-        "$NODE_BIN" "$REPO_DIR/packages/happy-cli/bin/happy.mjs" auth status 2>&1 || true)
+        "$NODE_BIN" "$REPO_DIR/happy/packages/happy-cli/bin/happy.mjs" auth status 2>&1 || true)
     echo "$AUTH_STATUS" | grep -q "Authenticated" || \
         die "Auth not complete. Re-run this script to retry from step 5."
 fi
@@ -159,7 +161,7 @@ Wants=network.target
 
 [Service]
 Type=simple
-ExecStart=$NODE_BIN $REPO_DIR/packages/happy-cli/bin/happy.mjs daemon start-sync
+ExecStart=$NODE_BIN $REPO_DIR/happy/packages/happy-cli/bin/happy.mjs daemon start-sync
 Restart=on-failure
 RestartSec=10
 Environment=HAPPY_SERVER_URL=$HAPPY_SERVER_URL
