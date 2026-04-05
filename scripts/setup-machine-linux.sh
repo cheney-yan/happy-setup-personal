@@ -29,28 +29,51 @@ die()  { echo -e "${RED}[setup] ERROR:${NC} $1"; exit 1; }
 command -v curl >/dev/null 2>&1 || die "curl is required. Install with: apt install curl / yum install curl"
 command -v git  >/dev/null 2>&1 || die "git is required. Install with: apt install git / yum install git"
 
-# ── 1. nvm ────────────────────────────────────────────────────────────────────
-log "Step 1/6 — Installing nvm..."
-if [ ! -d "$HOME/.nvm" ]; then
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-else
-    warn "nvm already installed, skipping."
+# ── 1. Node version manager (fnm preferred, fallback to nvm) ──────────────────
+log "Step 1/6 — Setting up Node version manager..."
+
+# Load fnm if available
+export FNM_DIR="${FNM_DIR:-$HOME/.local/share/fnm}"
+if command -v fnm >/dev/null 2>&1; then
+    warn "fnm already available, using it."
+    USE_FNM=true
+elif [ -d "$FNM_DIR" ]; then
+    export PATH="$FNM_DIR:$PATH"
+    eval "$(fnm env 2>/dev/null)" 2>/dev/null || true
+    command -v fnm >/dev/null 2>&1 && USE_FNM=true
 fi
 
-export NVM_DIR="$HOME/.nvm"
-# shellcheck source=/dev/null
-[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-command -v nvm >/dev/null 2>&1 || die "nvm failed to load."
+if [ "${USE_FNM:-false}" = "true" ]; then
+    log "Using fnm"
+else
+    # Load nvm if available, else install it
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+    if ! command -v nvm >/dev/null 2>&1; then
+        log "Installing nvm..."
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+        [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+    else
+        warn "nvm already installed, using it."
+    fi
+    command -v nvm >/dev/null 2>&1 || die "Neither fnm nor nvm could be loaded."
+    USE_FNM=false
+fi
 
 # ── 2. Node 24 ────────────────────────────────────────────────────────────────
 log "Step 2/6 — Installing Node $NODE_VERSION..."
-nvm install $NODE_VERSION
-nvm use $NODE_VERSION
+if [ "$USE_FNM" = "true" ]; then
+    fnm install $NODE_VERSION
+    fnm use $NODE_VERSION
+    fnm alias $NODE_VERSION $NVM_ALIAS 2>/dev/null || true
+    NODE_BIN="$(fnm which 2>/dev/null || which node)"
+else
+    nvm install $NODE_VERSION
+    nvm use $NODE_VERSION
+    nvm alias $NVM_ALIAS $NODE_VERSION
+    NODE_BIN="$(nvm which $NVM_ALIAS)"
+fi
 
-log "Setting nvm alias '$NVM_ALIAS' → Node $NODE_VERSION..."
-nvm alias $NVM_ALIAS $NODE_VERSION
-
-NODE_BIN="$(nvm which $NVM_ALIAS)"
 log "Node binary: $NODE_BIN ($(node --version))"
 
 # ── 3. Clone / update repo ────────────────────────────────────────────────────
