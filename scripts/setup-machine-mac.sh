@@ -21,8 +21,24 @@ log()  { echo -e "${GREEN}[setup]${NC} $1"; }
 warn() { echo -e "${YELLOW}[setup]${NC} $1"; }
 die()  { echo -e "${RED}[setup] ERROR:${NC} $1"; exit 1; }
 
+# ── 0. Migration: detect old repo layout ─────────────────────────────────────
+# Old layout: $REPO_DIR was a direct clone of slopus/happy (no happy/ subdir).
+# New layout: $REPO_DIR is the personal fork; slopus/happy lives in happy/.
+if [ -d "$REPO_DIR/.git" ] && [ ! -d "$REPO_DIR/happy" ]; then
+    warn "Detected old repo layout (pre-submodule restructure)."
+    BACKUP_DIR="${REPO_DIR}.bak.$(date +%Y%m%d%H%M%S)"
+    warn "Backing up old repo → $BACKUP_DIR"
+    mv "$REPO_DIR" "$BACKUP_DIR"
+    log "Backup complete. Will re-clone personal fork with submodule."
+fi
+
+# Migrate old plist path if it references the pre-submodule path
+if [ -f "$PLIST_PATH" ] && grep -q "$REPO_DIR/packages/happy-cli" "$PLIST_PATH" 2>/dev/null; then
+    warn "Detected old plist path (pre-submodule). Will be updated in Step 6."
+fi
+
 # ── 1. Node version manager ───────────────────────────────────────────────────
-log "Step 1/6 — Node version manager..."
+log "Step 1/7 — Node version manager..."
 
 USE_FNM=false
 
@@ -54,7 +70,7 @@ if [ "$USE_FNM" = "false" ]; then
 fi
 
 # ── 2. Node 24 + stable binary path ──────────────────────────────────────────
-log "Step 2/6 — Node $NODE_VERSION..."
+log "Step 2/7 — Node $NODE_VERSION..."
 
 if [ "$USE_FNM" = "true" ]; then
     fnm install $NODE_VERSION
@@ -107,7 +123,7 @@ fi
 log "Node binary: $NODE_BIN ($("$NODE_BIN" --version))"
 
 # ── 3. Clone / update repo ────────────────────────────────────────────────────
-log "Step 3/6 — Repo..."
+log "Step 3/7 — Repo..."
 if [ ! -d "$REPO_DIR/.git" ]; then
     mkdir -p "$(dirname "$REPO_DIR")"
     git clone https://github.com/cheney-yan/happy-setup-personal.git "$REPO_DIR"
@@ -120,13 +136,13 @@ fi
 cd "$REPO_DIR/happy"
 
 # ── 4. Install dependencies & build ──────────────────────────────────────────
-log "Step 4/6 — Dependencies & build..."
+log "Step 4/7 — Dependencies & build..."
 corepack enable
 yarn install
 yarn workspace happy build
 
 # ── 5. Auth ───────────────────────────────────────────────────────────────────
-log "Step 5/6 — Authentication..."
+log "Step 5/7 — Authentication..."
 AUTH_STATUS=$(HAPPY_SERVER_URL=$HAPPY_SERVER_URL HAPPY_HOME_DIR=$HAPPY_HOME \
     "$NODE_BIN" "$REPO_DIR/happy/packages/happy-cli/bin/happy.mjs" auth status 2>&1 || true)
 
