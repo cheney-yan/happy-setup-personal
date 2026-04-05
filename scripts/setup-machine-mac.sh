@@ -242,6 +242,23 @@ else
     log "Added Happy env vars to $RC_FILE"
 fi
 
+# Create happy wrapper script so 'happy' works from any shell
+mkdir -p "$HOME/.local/bin"
+cat > "$HOME/.local/bin/happy" <<WRAPPER
+#!/bin/bash
+exec "$NODE_BIN" "$REPO_DIR/happy/packages/happy-cli/bin/happy.mjs" "\$@"
+WRAPPER
+chmod +x "$HOME/.local/bin/happy"
+log "Created happy wrapper at ~/.local/bin/happy"
+
+# Add ~/.local/bin to PATH if not already there
+if ! grep -q '\.local/bin' "$RC_FILE" 2>/dev/null; then
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$RC_FILE"
+    log "Added ~/.local/bin to PATH in $RC_FILE"
+else
+    warn "~/.local/bin already in $RC_FILE, skipping."
+fi
+
 echo ""
 echo -e "${GREEN}✓ Setup complete!${NC}"
 echo "  Server:  $HAPPY_SERVER_URL"
@@ -249,5 +266,6 @@ echo "  Data:    $HAPPY_HOME"
 echo "  Logs:    $HAPPY_HOME/logs/"
 echo "  Status:  launchctl list | grep happy"
 echo ""
-echo "  Reload your shell or run:"
+echo "  Reload your shell then use:"
 echo "    source $RC_FILE"
+echo "    happy claude"
