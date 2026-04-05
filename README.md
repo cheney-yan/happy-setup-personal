@@ -14,6 +14,9 @@
 Use Claude Code or Codex from anywhere with end-to-end encryption.
 </h4>
 
+> **This is a personal fork of [slopus/happy](https://github.com/slopus/happy).**  
+> The setup has been reorganized and documented using [Claude Code](https://claude.ai/code). Rather than following manual setup docs, open this repo in Claude Code and let it guide you through configuring your environment — from running a self-hosted server to provisioning new machines. See `CLAUDE.md` for the full picture.
+
 <div align="center">
   
 [📱 **iOS App**](https://apps.apple.com/us/app/happy-claude-code-client/id6748571505) • [🤖 **Android App**](https://play.google.com/store/apps/details?id=com.ex3ndr.happy) • [🌐 **Web App**](https://app.happy.engineering) • [🎥 **See a Demo**](https://youtu.be/GCS0OG9QMSE) • [📚 **Documentation**](https://happy.engineering/docs/) • [💬 **Discord**](https://discord.gg/fX9WBAhyfD)
