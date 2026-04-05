@@ -141,6 +141,13 @@ corepack enable
 yarn install
 yarn workspace happy build
 
+# Remove any npm-global happy-coder that would shadow ~/.local/bin/happy
+NPM_BIN="$(dirname "$NODE_BIN")/npm"
+if "$NPM_BIN" list -g happy-coder 2>/dev/null | grep -q happy-coder; then
+    log "Removing npm-global happy-coder (replaced by local build)..."
+    "$NPM_BIN" uninstall -g happy-coder || warn "Could not uninstall happy-coder, continuing."
+fi
+
 # ── 5. Auth ───────────────────────────────────────────────────────────────────
 log "Step 5/7 — Authentication..."
 
