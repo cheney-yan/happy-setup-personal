@@ -204,7 +204,7 @@ Restart=on-failure
 RestartSec=10
 Environment=HAPPY_SERVER_URL=$HAPPY_SERVER_URL
 Environment=HAPPY_HOME_DIR=$HAPPY_HOME
-Environment=PATH=$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+Environment=PATH=$HOME/.local/bin:$(dirname "$NODE_BIN"):/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 StandardOutput=append:$HAPPY_HOME/logs/systemd-stdout.log
 StandardError=append:$HAPPY_HOME/logs/systemd-stderr.log
 

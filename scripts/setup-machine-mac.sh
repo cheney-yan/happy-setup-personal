@@ -225,7 +225,7 @@ cat > "$PLIST_PATH" <<PLIST
         <key>HAPPY_HOME_DIR</key>
         <string>$HAPPY_HOME</string>
         <key>PATH</key>
-        <string>$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <string>$HOME/.local/bin:$(dirname "$NODE_BIN"):/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     </dict>
     <key>StandardOutPath</key>
     <string>$HAPPY_HOME/logs/launchd-stdout.log</string>
