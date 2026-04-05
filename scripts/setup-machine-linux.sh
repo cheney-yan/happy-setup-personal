@@ -11,7 +11,6 @@ if [ -z "$HAPPY_SERVER_URL" ]; then
     read -rp "Enter your Happy Server URL (e.g. https://ms.yourtailnet.ts.net): " HAPPY_SERVER_URL
 fi
 NODE_VERSION="24"
-NVM_ALIAS="ai"
 REPO_DIR="$HOME/code/ai/happy"
 HAPPY_HOME="$HOME/.happy"
 
@@ -65,13 +64,11 @@ log "Step 2/6 — Installing Node $NODE_VERSION..."
 if [ "$USE_FNM" = "true" ]; then
     fnm install $NODE_VERSION
     fnm use $NODE_VERSION
-    fnm alias $NODE_VERSION $NVM_ALIAS 2>/dev/null || true
-    NODE_BIN="$(fnm which 2>/dev/null || which node)"
+    NODE_BIN="$(fnm which)"
 else
     nvm install $NODE_VERSION
     nvm use $NODE_VERSION
-    nvm alias $NVM_ALIAS $NODE_VERSION
-    NODE_BIN="$(nvm which $NVM_ALIAS)"
+    NODE_BIN="$(nvm which $NODE_VERSION)"
 fi
 
 log "Node binary: $NODE_BIN ($(node --version))"
