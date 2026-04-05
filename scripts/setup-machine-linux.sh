@@ -139,28 +139,50 @@ yarn workspace happy build
 
 # ── 5. Auth ───────────────────────────────────────────────────────────────────
 log "Step 5/7 — Authentication..."
-AUTH_STATUS=$(HAPPY_SERVER_URL=$HAPPY_SERVER_URL HAPPY_HOME_DIR=$HAPPY_HOME \
-    "$NODE_BIN" "$REPO_DIR/happy/packages/happy-cli/bin/happy.mjs" auth status 2>&1 || true)
 
-if echo "$AUTH_STATUS" | grep -q "Authenticated"; then
-    warn "Already authenticated, skipping auth login."
-else
+do_auth_login() {
     echo ""
-    echo "  Open a new terminal and run:"
+    echo "  Run this in a new terminal:"
     echo ""
     echo -e "  ${YELLOW}HAPPY_SERVER_URL=$HAPPY_SERVER_URL \\"
     echo "  HAPPY_HOME_DIR=$HAPPY_HOME \\"
     echo -e "  node $REPO_DIR/happy/packages/happy-cli/bin/happy.mjs auth login${NC}"
     echo ""
-    echo "  Choose 'Mobile', use the in-app scanner (not system camera)."
-    echo "  Make sure Happy App server is set to: $HAPPY_SERVER_URL"
+    echo "  In the Happy mobile app:"
+    echo "    1. Settings → Server URL → $HAPPY_SERVER_URL"
+    echo "    2. Scan the QR code with the in-app scanner (not system camera)"
+    echo "    3. Choose 'Mobile'"
     echo ""
-    read -rp "Press ENTER once auth is complete..."
+    read -rp "  Press ENTER once the QR code is scanned and the terminal shows success..."
 
-    AUTH_STATUS=$(HAPPY_SERVER_URL=$HAPPY_SERVER_URL HAPPY_HOME_DIR=$HAPPY_HOME \
+    local status
+    status=$(HAPPY_SERVER_URL=$HAPPY_SERVER_URL HAPPY_HOME_DIR=$HAPPY_HOME \
         "$NODE_BIN" "$REPO_DIR/happy/packages/happy-cli/bin/happy.mjs" auth status 2>&1 || true)
-    echo "$AUTH_STATUS" | grep -q "Authenticated" || \
+    echo "$status" | grep -q "Authenticated" || \
         die "Auth not complete. Re-run this script to retry from step 5."
+}
+
+AUTH_STATUS=$(HAPPY_SERVER_URL=$HAPPY_SERVER_URL HAPPY_HOME_DIR=$HAPPY_HOME \
+    "$NODE_BIN" "$REPO_DIR/happy/packages/happy-cli/bin/happy.mjs" auth status 2>&1 || true)
+
+NEEDS_AUTH=true
+if echo "$AUTH_STATUS" | grep -q "Authenticated"; then
+    echo ""
+    echo "  Existing authentication found in $HAPPY_HOME."
+    echo "  If the server database was reset, this token is stale and must be cleared."
+    read -rp "  Clear local state and re-authenticate? (y/N): " RESET_AUTH
+    if [ "$RESET_AUTH" = "y" ] || [ "$RESET_AUTH" = "Y" ]; then
+        warn "Clearing local auth state: $HAPPY_HOME"
+        rm -rf "$HAPPY_HOME"
+        mkdir -p "$HAPPY_HOME/logs"
+    else
+        warn "Keeping existing auth."
+        NEEDS_AUTH=false
+    fi
+fi
+
+if [ "$NEEDS_AUTH" = "true" ]; then
+    do_auth_login
 fi
 log "Auth verified ✓"
 
