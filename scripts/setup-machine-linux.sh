@@ -72,13 +72,23 @@ if [ "$USE_FNM" = "true" ]; then
     NODE_BIN="$(fnm which)"
 else
     nvm install $NODE_VERSION
-    nvm use $NODE_VERSION
+    ACTUAL_VER="$(nvm version $NODE_VERSION)"
+    # Isolation trick: copy Node 24 into a fake v1.1.1 directory so its
+    # global packages are fully isolated from other projects using Node 24.
+    FAKE_VER="v1.1.1"
+    if [ ! -d "$NVM_DIR/versions/node/$FAKE_VER" ]; then
+        log "Copying $ACTUAL_VER → $FAKE_VER (isolation layer)..."
+        cp -r "$NVM_DIR/versions/node/$ACTUAL_VER" "$NVM_DIR/versions/node/$FAKE_VER"
+    else
+        warn "Isolated env $FAKE_VER already exists, skipping copy."
+    fi
+    nvm use $FAKE_VER
     if ! nvm alias ai >/dev/null 2>&1; then
-        nvm alias ai $NODE_VERSION && log "Created nvm alias 'ai' → Node $NODE_VERSION"
+        nvm alias ai $FAKE_VER && log "Created nvm alias 'ai' → $FAKE_VER (Node $NODE_VERSION)"
     else
         warn "nvm alias 'ai' already exists, skipping."
     fi
-    NODE_BIN="$(nvm which $NODE_VERSION)"
+    NODE_BIN="$(nvm which ai)"
 fi
 
 log "Node binary: $NODE_BIN ($(node --version))"
