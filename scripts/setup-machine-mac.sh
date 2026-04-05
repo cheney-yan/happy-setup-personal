@@ -141,13 +141,6 @@ corepack enable
 yarn install
 yarn workspace happy build
 
-# Remove any npm-global happy-coder that would shadow ~/.local/bin/happy
-NPM_BIN="$(dirname "$NODE_BIN")/npm"
-if "$NPM_BIN" list -g happy-coder 2>/dev/null | grep -q happy-coder; then
-    log "Removing npm-global happy-coder (replaced by local build)..."
-    "$NPM_BIN" uninstall -g happy-coder || warn "Could not uninstall happy-coder, continuing."
-fi
-
 # ── 5. Auth ───────────────────────────────────────────────────────────────────
 log "Step 5/7 — Authentication..."
 
@@ -286,6 +279,19 @@ if ! grep -q '\.local/bin' "$RC_FILE" 2>/dev/null; then
     log "Added ~/.local/bin to PATH in $RC_FILE"
 else
     warn "~/.local/bin already in $RC_FILE, skipping."
+fi
+
+# Check that our wrapper wins in the current PATH
+HAPPY_IN_PATH="$(command -v happy 2>/dev/null || true)"
+if [ "$HAPPY_IN_PATH" != "$HOME/.local/bin/happy" ] && [ -n "$HAPPY_IN_PATH" ]; then
+    echo ""
+    warn "⚠️  A conflicting 'happy' binary was found at: $HAPPY_IN_PATH"
+    warn "   This will shadow the local build until it is removed."
+    warn "   Please uninstall it manually, for example:"
+    warn "     npm uninstall -g happy"
+    warn "     npm uninstall -g happy-coder"
+    warn "   Then re-run this script to finish setup."
+    exit 1
 fi
 
 echo ""
