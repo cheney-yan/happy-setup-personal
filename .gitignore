@@ -52,6 +52,11 @@ CLAUDE.local.md
 
 # Local dev environments
 .environments/
+
+# Machine-specific generated scripts (contain absolute paths)
+packages/happy-server/scripts/
+packages/happy-server/data/
+packages/happy-server/.logs/
 environments/data/
 
 # Development planning notes (keep local, don't commit)
