@@ -153,7 +153,7 @@ fi
 log "Auth verified ✓"
 
 # ── 6. launchd daemon ─────────────────────────────────────────────────────────
-log "Step 6/6 — Installing daemon (launchd)..."
+log "Step 6/7 — Installing daemon (launchd)..."
 mkdir -p "$HAPPY_HOME/logs"
 mkdir -p "$HOME/Library/LaunchAgents"
 
@@ -204,9 +204,34 @@ else
     die "Daemon failed to load. Check logs: $HAPPY_HOME/logs/"
 fi
 
+# ── 7. Shell environment ──────────────────────────────────────────────────────
+log "Step 7/7 — Shell environment..."
+
+# Detect rc file
+if [ -n "$ZSH_VERSION" ] || [ "$(basename "$SHELL")" = "zsh" ]; then
+    RC_FILE="$HOME/.zshrc"
+else
+    RC_FILE="$HOME/.bashrc"
+fi
+
+HAPPY_ENV_BLOCK="# Happy CLI
+export HAPPY_SERVER_URL=\"$HAPPY_SERVER_URL\"
+export HAPPY_HOME_DIR=\"$HAPPY_HOME\""
+
+if grep -q "HAPPY_SERVER_URL" "$RC_FILE" 2>/dev/null; then
+    warn "HAPPY_SERVER_URL already in $RC_FILE, skipping."
+else
+    echo "" >> "$RC_FILE"
+    echo "$HAPPY_ENV_BLOCK" >> "$RC_FILE"
+    log "Added Happy env vars to $RC_FILE"
+fi
+
 echo ""
 echo -e "${GREEN}✓ Setup complete!${NC}"
 echo "  Server:  $HAPPY_SERVER_URL"
 echo "  Data:    $HAPPY_HOME"
 echo "  Logs:    $HAPPY_HOME/logs/"
 echo "  Status:  launchctl list | grep happy"
+echo ""
+echo "  Reload your shell or run:"
+echo "    source $RC_FILE"

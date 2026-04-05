@@ -149,7 +149,7 @@ fi
 log "Auth verified ✓"
 
 # ── 6. systemd user service ───────────────────────────────────────────────────
-log "Step 6/6 — Installing daemon (systemd)..."
+log "Step 6/7 — Installing daemon (systemd)..."
 mkdir -p "$HAPPY_HOME/logs"
 mkdir -p "$HOME/.config/systemd/user"
 
@@ -186,6 +186,27 @@ else
     warn "Daemon may not be running. Check: systemctl --user status happy-cli-daemon"
 fi
 
+# ── 7. Shell environment ──────────────────────────────────────────────────────
+log "Step 7/7 — Shell environment..."
+
+if [ -n "$ZSH_VERSION" ] || [ "$(basename "$SHELL")" = "zsh" ]; then
+    RC_FILE="$HOME/.zshrc"
+else
+    RC_FILE="$HOME/.bashrc"
+fi
+
+HAPPY_ENV_BLOCK="# Happy CLI
+export HAPPY_SERVER_URL=\"$HAPPY_SERVER_URL\"
+export HAPPY_HOME_DIR=\"$HAPPY_HOME\""
+
+if grep -q "HAPPY_SERVER_URL" "$RC_FILE" 2>/dev/null; then
+    warn "HAPPY_SERVER_URL already in $RC_FILE, skipping."
+else
+    echo "" >> "$RC_FILE"
+    echo "$HAPPY_ENV_BLOCK" >> "$RC_FILE"
+    log "Added Happy env vars to $RC_FILE"
+fi
+
 echo ""
 echo -e "${GREEN}✓ Setup complete!${NC}"
 echo "  Server:  $HAPPY_SERVER_URL"
@@ -193,3 +214,6 @@ echo "  Data:    $HAPPY_HOME"
 echo "  Logs:    $HAPPY_HOME/logs/"
 echo "  Status:  systemctl --user status happy-cli-daemon"
 echo "  Logs:    journalctl --user -u happy-cli-daemon -f"
+echo ""
+echo "  Reload your shell or run:"
+echo "    source $RC_FILE"
